@@ -19,7 +19,7 @@ if 'api_key_configured' not in st.session_state:
 
 # Sidebar for API key input
 with st.sidebar:
-    st.header("🔑 API Configuration")
+    st.header("API Configuration")
     
     # Input field for API key
     api_key = st.text_input(
@@ -176,7 +176,7 @@ def summarize_with_gemini(posts_text):
 
 # --- STREAMLIT UI ---
 
-st.title("🇳🇬 Nairaland Topic Summarizer")
+st.title("Nairaland Topic Summarizer")
 st.markdown("Enter a Nairaland topic URL to get an AI-powered summary of the latest conversations.")
 
 # --- Input Form ---
@@ -230,4 +230,3 @@ if submitted:
                 st.error("No posts were found. Please check the URL or try again later.")
 
 st.markdown("---")
-# st.markdown("Built with ❤️ using Python and Streamlit.")
