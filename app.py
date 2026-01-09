@@ -62,8 +62,8 @@ def get_page_urls_to_scrape(topic_url, num_pages_to_scrape):
     st.info(f"Finding the last {num_pages_to_scrape} page(s) for topic...")
     try:
         # Use curl_cffi to bypass Cloudflare with authentic TLS fingerprint
-        # impersonate="chrome110" mimics a real Chrome browser
-        response = cffi_requests.get(get_clean_topic_url(topic_url), impersonate="chrome110", timeout=15)
+        # impersonate="chrome120" mimics a newer real Chrome browser
+        response = cffi_requests.get(get_clean_topic_url(topic_url), impersonate="chrome120", timeout=15)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'lxml')
 
@@ -142,7 +142,7 @@ def fetch_and_parse_url(url):
     """Fetches and parses a URL for Nairaland posts."""
     try:
         # Use curl_cffi to bypass Cloudflare with authentic TLS fingerprint
-        response = cffi_requests.get(url, impersonate="chrome110", timeout=15)
+        response = cffi_requests.get(url, impersonate="chrome120", timeout=15)
         response.raise_for_status()
         return parse_html_content(response.text, url)
     except requests.exceptions.RequestException as e:
