@@ -61,7 +61,7 @@ def get_page_urls_to_scrape(topic_url, num_pages_to_scrape):
     st.info(f"Finding the last {num_pages_to_scrape} page(s) for topic...")
     try:
         # Use cloudscraper to bypass Cloudflare
-        scraper = cloudscraper.create_scraper()
+        scraper = cloudscraper.create_scraper(browser={'browser': 'chrome', 'platform': 'windows', 'mobile': False})
         response = scraper.get(get_clean_topic_url(topic_url), timeout=15)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'lxml')
@@ -141,7 +141,7 @@ def fetch_and_parse_url(url):
     """Fetches and parses a URL for Nairaland posts."""
     try:
         # Use cloudscraper to bypass Cloudflare
-        scraper = cloudscraper.create_scraper()
+        scraper = cloudscraper.create_scraper(browser={'browser': 'chrome', 'platform': 'windows', 'mobile': False})
         response = scraper.get(url, timeout=15)
         response.raise_for_status()
         return parse_html_content(response.text, url)
