@@ -5,3 +5,4 @@ lxml
 cloudscraper
 tenacity
 brotli
+curl_cffi

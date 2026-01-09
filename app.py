@@ -3,6 +3,7 @@ import requests
 import google.generativeai as genai
 import streamlit as st
 import cloudscraper
+from curl_cffi import requests as cffi_requests
 from tenacity import retry, stop_after_attempt, wait_random_exponential, retry_if_exception_type
 from google.api_core.exceptions import ResourceExhausted
 from bs4 import BeautifulSoup
@@ -60,9 +61,9 @@ def get_page_urls_to_scrape(topic_url, num_pages_to_scrape):
     """Finds the URLs for the last 'n' pages of a Nairaland topic."""
     st.info(f"Finding the last {num_pages_to_scrape} page(s) for topic...")
     try:
-        # Use cloudscraper to bypass Cloudflare
-        scraper = cloudscraper.create_scraper(browser={'browser': 'chrome', 'platform': 'windows', 'mobile': False})
-        response = scraper.get(get_clean_topic_url(topic_url), timeout=15)
+        # Use curl_cffi to bypass Cloudflare with authentic TLS fingerprint
+        # impersonate="chrome110" mimics a real Chrome browser
+        response = cffi_requests.get(get_clean_topic_url(topic_url), impersonate="chrome110", timeout=15)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'lxml')
 
@@ -140,9 +141,8 @@ def parse_html_content(html_content, page_url):
 def fetch_and_parse_url(url):
     """Fetches and parses a URL for Nairaland posts."""
     try:
-        # Use cloudscraper to bypass Cloudflare
-        scraper = cloudscraper.create_scraper(browser={'browser': 'chrome', 'platform': 'windows', 'mobile': False})
-        response = scraper.get(url, timeout=15)
+        # Use curl_cffi to bypass Cloudflare with authentic TLS fingerprint
+        response = cffi_requests.get(url, impersonate="chrome110", timeout=15)
         response.raise_for_status()
         return parse_html_content(response.text, url)
     except requests.exceptions.RequestException as e:
