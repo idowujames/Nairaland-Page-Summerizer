@@ -1,6 +1,6 @@
 # Nairaland Thread Summarizer
 
-A simple Python application that helps users keep up with Nairaland forum discussions by providing concise summaries of the latest thread pages, highlighting key discussions, and identifying representative posts using AI(Google Gemini Flash). There are informative threads that I've been following for years and I've been finding it hard to keep up with the latest discussions. This was an fun project that I did to help me keep up with the latest discussions without having to read through hundreds of posts.
+A simple Python application that helps users keep up with Nairaland forum discussions by providing concise summaries of the latest thread pages, highlighting key discussions, and identifying representative posts using AI(Google Gemini Flash). There are informative threads that are highly valuable for marketing and research teams. This project was created to help keep up with relevant discussions without having to read through hundreds of posts.
 
 ## Overview
 
