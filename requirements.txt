@@ -1,4 +1,6 @@
-beautifulsoup4==4.13.4
-protobuf==6.31.1
-Requests==2.32.4
-streamlit==1.46.0
+streamlit
+google-generativeai
+beautifulsoup4
+lxml
+cloudscraper
+tenacity

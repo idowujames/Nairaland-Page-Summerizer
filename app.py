@@ -2,6 +2,9 @@ import os
 import requests
 import google.generativeai as genai
 import streamlit as st
+import cloudscraper
+from tenacity import retry, stop_after_attempt, wait_random_exponential, retry_if_exception_type
+from google.api_core.exceptions import ResourceExhausted
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urlunparse
 
@@ -57,8 +60,9 @@ def get_page_urls_to_scrape(topic_url, num_pages_to_scrape):
     """Finds the URLs for the last 'n' pages of a Nairaland topic."""
     st.info(f"Finding the last {num_pages_to_scrape} page(s) for topic...")
     try:
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36...'}
-        response = requests.get(get_clean_topic_url(topic_url), headers=headers, timeout=15)
+        # Use cloudscraper to bypass Cloudflare
+        scraper = cloudscraper.create_scraper()
+        response = scraper.get(get_clean_topic_url(topic_url), timeout=15)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'lxml')
 
@@ -80,7 +84,12 @@ def get_page_urls_to_scrape(topic_url, num_pages_to_scrape):
             if tag_text.startswith('(') and tag_text.endswith(')'):
                 try: num = int(tag_text.strip('()'))
                 except ValueError: continue
-                if num > last_page_num: last_page_num = num
+            elif tag_text.isdigit():
+                 try: num = int(tag_text)
+                 except ValueError: continue
+            else: continue
+            
+            if num > last_page_num: last_page_num = num
 
         last_page_num = max(1, last_page_num)
         start_page = max(1, last_page_num - num_pages_to_scrape + 1)
@@ -131,8 +140,9 @@ def parse_html_content(html_content, page_url):
 def fetch_and_parse_url(url):
     """Fetches and parses a URL for Nairaland posts."""
     try:
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)...'}
-        response = requests.get(url, headers=headers, timeout=15)
+        # Use cloudscraper to bypass Cloudflare
+        scraper = cloudscraper.create_scraper()
+        response = scraper.get(url, timeout=15)
         response.raise_for_status()
         return parse_html_content(response.text, url)
     except requests.exceptions.RequestException as e:
@@ -151,12 +161,18 @@ def format_posts_for_llm(posts):
     return formatted_string
 
 @st.cache_data(ttl=600)
+@retry(
+    retry=retry_if_exception_type(ResourceExhausted),
+    wait=wait_random_exponential(multiplier=2, max=60),
+    stop=stop_after_attempt(5),
+    reraise=True
+)
 def summarize_with_gemini(posts_text):
     """Sends the formatted post text to the Gemini API for summarization."""
     if not api_key:
         return "Cannot summarize because Gemini API key is not configured."
 
-    model = genai.GenerativeModel('gemini-1.5-flash-latest')
+    model = genai.GenerativeModel('gemini-2.5-flash-lite')
     prompt = f"""
     You are an expert at analyzing and summarizing online forum discussions.
     Based on the following collection of posts from a Nairaland topic, please provide:
@@ -172,7 +188,16 @@ def summarize_with_gemini(posts_text):
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
-        return f"An error occurred while communicating with the Gemini API: {e}"
+        error_msg = f"An error occurred while communicating with the Gemini API: {e}"
+        if "404" in str(e):
+             try:
+                 models = list(genai.list_models())
+                 # Filter for generateContent supported models
+                 supported_models = [m.name for m in models if 'generateContent' in m.supported_generation_methods]
+                 error_msg += f"\n\n**Available supported models:**\n" + "\n".join([f"- `{m}`" for m in supported_models])
+             except Exception as list_e:
+                 error_msg += f"\n\nCould not list available models: {list_e}"
+        return error_msg
 
 # --- STREAMLIT UI ---
 
